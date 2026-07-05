@@ -1,5 +1,5 @@
-import structure from "../data/quran-structure.json" with { type: "json" };
-import type { SurahMeta } from "./types.js";
+import structure from "../data/quran-structure.json";
+import type { SurahMeta } from "./types";
 
 export const SURAHS: readonly SurahMeta[] = structure as SurahMeta[];
 

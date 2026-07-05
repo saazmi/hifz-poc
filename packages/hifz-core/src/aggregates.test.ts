@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { markRange, setAyahState } from "./state.js";
+import { markRange, setAyahState } from "./state";
 import {
   juzProgressApprox,
   overallProgress,
   surahProgress,
-} from "./aggregates.js";
-import { ayahKey, type AyahRecordMap } from "./types.js";
-import { TOTAL_AYAT } from "./quran.js";
+} from "./aggregates";
+import { ayahKey, type AyahRecordMap } from "./types";
+import { TOTAL_AYAT } from "./quran";
 
 const T = "2026-01-01T00:00:00.000Z";
 const empty = (): AyahRecordMap => new Map();

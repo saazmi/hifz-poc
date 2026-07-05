@@ -1,4 +1,4 @@
-import { ayahKey, type AyahRecord, type AyahRecordMap } from "./types.js";
+import { ayahKey, type AyahRecord, type AyahRecordMap } from "./types";
 
 export interface PersistenceAdapter {
   load(): Promise<AyahRecord[]>;

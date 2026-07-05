@@ -4,8 +4,8 @@ import {
   type AyahRecordMap,
   type Chunk,
   type RevisionTaskWithStruggle,
-} from "./types.js";
-import { getSurah } from "./quran.js";
+} from "./types";
+import { getSurah } from "./quran";
 
 export const LADDER_DAYS: readonly number[] = [1, 3, 7, 14, 30, 60];
 export const MAX_CHUNK_SIZE = 15;

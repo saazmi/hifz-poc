@@ -3,8 +3,8 @@ import {
   type AyahRecord,
   type AyahRecordMap,
   type PersistedAyahState,
-} from "./types.js";
-import { isValidAyah } from "./quran.js";
+} from "./types";
+import { isValidAyah } from "./quran";
 
 export type Clock = () => string;
 

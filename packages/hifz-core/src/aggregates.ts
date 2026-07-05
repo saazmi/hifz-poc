@@ -1,5 +1,5 @@
-import { ayahKey, type AyahKey, type AyahRecordMap, type Progress } from "./types.js";
-import { getSurah, SURAHS, TOTAL_AYAT } from "./quran.js";
+import { ayahKey, type AyahKey, type AyahRecordMap, type Progress } from "./types";
+import { getSurah, SURAHS, TOTAL_AYAT } from "./quran";
 
 const empty = (total: number): Progress => ({
   memorized: 0,

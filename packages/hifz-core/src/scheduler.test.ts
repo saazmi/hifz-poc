@@ -10,9 +10,9 @@ import {
   isChunkOverdue,
   needsReviewKeys,
   totalDueChunkCount,
-} from "./scheduler.js";
-import { markRange, markReviewed, setAyahState } from "./state.js";
-import type { AyahRecordMap } from "./types.js";
+} from "./scheduler";
+import { markRange, markReviewed, setAyahState } from "./state";
+import type { AyahRecordMap } from "./types";
 
 const T0 = "2026-01-01T00:00:00.000Z";
 const plusDays = (iso: string, d: number): string =>

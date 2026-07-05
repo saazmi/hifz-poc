@@ -6,8 +6,8 @@ import {
   markStruggled,
   setAyahState,
   getRecord,
-} from "./state.js";
-import type { AyahRecordMap } from "./types.js";
+} from "./state";
+import type { AyahRecordMap } from "./types";
 
 const T0 = "2026-01-01T00:00:00.000Z";
 const T1 = "2026-01-02T00:00:00.000Z";
