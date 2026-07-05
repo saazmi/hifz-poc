@@ -14,6 +14,7 @@ import {
   type AyahRecordMap,
   type PersistedAyahState,
 } from "@hifz/core";
+import { t } from "./i18n";
 
 const STORAGE_KEY = "hifz.records.v1";
 
@@ -38,6 +39,11 @@ interface StoreState {
     surah: number,
     from: number,
     to: number,
+    target: PersistedAyahState | "none",
+  ): void;
+  markManyState(
+    surah: number,
+    ayat: readonly number[],
     target: PersistedAyahState | "none",
   ): void;
   reviewRange(surah: number, from: number, to: number): void;
@@ -108,33 +114,45 @@ export const useStore = create<StoreState>((set, get) => {
     setState(surah, ayah, target) {
       mutate(
         target === "none"
-          ? `Cleared ${surah}:${ayah}`
-          : `Set ${surah}:${ayah} → ${target}`,
+          ? t.undoLabels.cleared(surah, ayah)
+          : t.undoLabels.set(surah, ayah, target),
         (m, n) => setAyahState(m, surah, ayah, target, n),
       );
     },
 
     cycleState(surah, ayah) {
-      mutate(`Cycled ${surah}:${ayah}`, (m, n) => cycleAyahState(m, surah, ayah, n));
+      mutate(t.undoLabels.cycled(surah, ayah), (m, n) => cycleAyahState(m, surah, ayah, n));
     },
 
     markRangeState(surah, from, to, target) {
       mutate(
-        `Marked ${surah}:${from}–${to} → ${target}`,
+        t.undoLabels.range(surah, from, to, target),
         (m, n) => markRange(m, surah, from, to, target, n),
+      );
+    },
+
+    markManyState(surah, ayat, target) {
+      if (ayat.length === 0) return;
+      mutate(
+        t.undoLabels.many(surah, ayat.length, target),
+        (m, n) => {
+          let next = m;
+          for (const a of ayat) next = setAyahState(next, surah, a, target, n);
+          return next;
+        },
       );
     },
 
     reviewRange(surah, from, to) {
       mutate(
-        `Reviewed ${surah}:${from}–${to}`,
+        t.undoLabels.reviewed(surah, from, to),
         (m, n) => markReviewed(m, surah, from, to, n),
       );
     },
 
     struggledRange(surah, from, to) {
       mutate(
-        `Struggled on ${surah}:${from}–${to}`,
+        t.undoLabels.struggled(surah, from, to),
         (m, n) => markStruggled(m, surah, from, to, n),
       );
     },

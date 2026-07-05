@@ -16,6 +16,7 @@ import {
 import { useStore } from "../store";
 import { theme } from "../theme";
 import { ProgressBar } from "../components/ProgressBar";
+import { t } from "../i18n";
 
 interface Props {
   onOpenSurah(id: number): void;
@@ -23,13 +24,9 @@ interface Props {
 
 export function SurahList({ onOpenSurah }: Props) {
   const records = useStore((s) => s.records);
-  const needsReview = useStore((s) => s.needsReview);
   const [query, setQuery] = useState("");
 
-  const overall = useMemo(
-    () => overallProgress(records, needsReview),
-    [records, needsReview],
-  );
+  const overall = useMemo(() => overallProgress(records), [records]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -60,17 +57,16 @@ export function SurahList({ onOpenSurah }: Props) {
             marginBottom: theme.spacing(1),
           }}
         >
-          Mushaf Tracker
+          {t.appTitle}
         </Text>
         <Text style={{ color: theme.textDim, marginBottom: theme.spacing(3) }}>
-          {overall.memorized + overall.needsReview} / {TOTAL_AYAT} verses memorized ·{" "}
-          {overall.learning} learning · {overall.needsReview} need review
+          {t.overallSummary(overall.memorized, TOTAL_AYAT, overall.learning)}
         </Text>
         <ProgressBar progress={overall} height={8} />
         <TextInput
           value={query}
           onChangeText={setQuery}
-          placeholder="Search surah…"
+          placeholder={t.searchPlaceholder}
           placeholderTextColor={theme.textFaint}
           style={{
             marginTop: theme.spacing(3),
@@ -103,10 +99,9 @@ function SurahRow({
   onPress(): void;
 }) {
   const records = useStore((s) => s.records);
-  const needsReview = useStore((s) => s.needsReview);
   const progress = useMemo(
-    () => surahProgress(records, surah.id, needsReview),
-    [records, needsReview, surah.id],
+    () => surahProgress(records, surah.id),
+    [records, surah.id],
   );
   return (
     <Pressable
@@ -153,7 +148,7 @@ function SurahRow({
             }}
           >
             <Text style={{ color: theme.textFaint, fontSize: 12 }}>
-              {surah.ayahCount} ayat · Juz {surah.juzSpan.join(", ")}
+              {t.surahRowMeta(surah.ayahCount, surah.juzSpan.join(", "))}
             </Text>
             <Text style={{ color: theme.textDim, fontSize: 12 }}>
               {Math.round(progress.percent)}%

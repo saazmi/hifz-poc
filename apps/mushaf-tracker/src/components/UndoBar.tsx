@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useStore } from "../store";
 import { theme } from "../theme";
+import { t } from "../i18n";
 
 const UNDO_MS = 5000;
 
@@ -51,7 +52,7 @@ export function UndoBar() {
           backgroundColor: pressed ? theme.border : "transparent",
         })}
       >
-        <Text style={{ color: theme.accent, fontWeight: "600" }}>Undo</Text>
+        <Text style={{ color: theme.accent, fontWeight: "600" }}>{t.undo}</Text>
       </Pressable>
     </View>
   );

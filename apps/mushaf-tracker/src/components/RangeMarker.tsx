@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Modal, Pressable, Text, TextInput, View } from "react-native";
 import type { PersistedAyahState } from "@hifz/core";
 import { theme } from "../theme";
+import { t } from "../i18n";
 
 interface Props {
   visible: boolean;
@@ -12,9 +13,9 @@ interface Props {
 }
 
 const OPTIONS: { label: string; value: PersistedAyahState | "none" }[] = [
-  { label: "Not started", value: "none" },
-  { label: "Learning", value: "learning" },
-  { label: "Memorized", value: "memorized" },
+  { label: t.stateButton.none, value: "none" },
+  { label: t.stateButton.learning, value: "learning" },
+  { label: t.stateButton.memorized, value: "memorized" },
 ];
 
 export function RangeMarker({ visible, surah, ayahCount, onClose, onConfirm }: Props) {
@@ -54,13 +55,13 @@ export function RangeMarker({ visible, surah, ayahCount, onClose, onConfirm }: P
           }}
         >
           <Text style={{ color: theme.text, fontSize: 18, fontWeight: "600", marginBottom: theme.spacing(4) }}>
-            Mark range in surah {surah}
+            {t.range.title(surah)}
           </Text>
           <View style={{ flexDirection: "row", gap: theme.spacing(2), marginBottom: theme.spacing(4) }}>
-            <NumField label="From" value={from} onChange={setFrom} max={ayahCount} />
-            <NumField label="To" value={to} onChange={setTo} max={ayahCount} />
+            <NumField label={t.range.from} value={from} onChange={setFrom} max={ayahCount} />
+            <NumField label={t.range.to} value={to} onChange={setTo} max={ayahCount} />
           </View>
-          <Text style={{ color: theme.textDim, marginBottom: theme.spacing(2) }}>Target state</Text>
+          <Text style={{ color: theme.textDim, marginBottom: theme.spacing(2) }}>{t.range.target}</Text>
           <View style={{ gap: theme.spacing(2), marginBottom: theme.spacing(4) }}>
             {OPTIONS.map((o) => (
               <Pressable
@@ -90,7 +91,7 @@ export function RangeMarker({ visible, surah, ayahCount, onClose, onConfirm }: P
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: theme.textDim }}>Cancel</Text>
+              <Text style={{ color: theme.textDim }}>{t.range.cancel}</Text>
             </Pressable>
             <Pressable
               onPress={submit}
@@ -104,7 +105,7 @@ export function RangeMarker({ visible, surah, ayahCount, onClose, onConfirm }: P
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: theme.text, fontWeight: "600" }}>Apply</Text>
+              <Text style={{ color: theme.text, fontWeight: "600" }}>{t.range.apply}</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -127,7 +128,7 @@ function NumField({
   return (
     <View style={{ flex: 1 }}>
       <Text style={{ color: theme.textDim, fontSize: 12, marginBottom: theme.spacing(1) }}>
-        {label} (1–{max})
+        {label} ({t.range.range(max)})
       </Text>
       <TextInput
         value={value}

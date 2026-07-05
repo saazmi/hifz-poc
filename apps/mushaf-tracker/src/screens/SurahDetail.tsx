@@ -10,8 +10,9 @@ import { useStore } from "../store";
 import { theme } from "../theme";
 import { ProgressBar } from "../components/ProgressBar";
 import { AyahCell } from "../components/AyahCell";
-import { AyahSheet } from "../components/AyahSheet";
 import { RangeMarker } from "../components/RangeMarker";
+import { SelectionBar } from "../components/SelectionBar";
+import { t } from "../i18n";
 
 interface Props {
   surahId: number;
@@ -21,83 +22,138 @@ interface Props {
 export function SurahDetail({ surahId, onBack }: Props) {
   const surah = getSurah(surahId);
   const records = useStore((s) => s.records);
-  const needsReview = useStore((s) => s.needsReview);
-  const setState = useStore((s) => s.setState);
   const cycleState = useStore((s) => s.cycleState);
   const markRangeState = useStore((s) => s.markRangeState);
-  const reviewRange = useStore((s) => s.reviewRange);
+  const markManyState = useStore((s) => s.markManyState);
 
-  const [sheetAyah, setSheetAyah] = useState<number | null>(null);
   const [rangeOpen, setRangeOpen] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+
+  const enterSelection = (): void => {
+    setSelected(new Set());
+    setSelectionMode(true);
+  };
+  const exitSelection = (): void => {
+    setSelectionMode(false);
+    setSelected(new Set());
+  };
+  const toggleSelected = (ayah: number): void => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(ayah)) next.delete(ayah);
+      else next.add(ayah);
+      return next;
+    });
+  };
+  const applySelection = (target: "learning" | "memorized" | "none"): void => {
+    markManyState(surahId, Array.from(selected).sort((a, b) => a - b), target);
+    exitSelection();
+  };
 
   const progress = useMemo(
-    () => surahProgress(records, surahId, needsReview),
-    [records, needsReview, surahId],
+    () => surahProgress(records, surahId),
+    [records, surahId],
   );
 
   const stateOf = (ayah: number): AyahState => {
     const rec = records.get(ayahKey(surahId, ayah));
-    if (!rec) return "none";
-    if (rec.state === "memorized" && needsReview.has(ayahKey(surahId, ayah))) {
-      return "needsReview";
-    }
-    return rec.state;
+    return rec?.state ?? "none";
   };
 
   const ayat = Array.from({ length: surah.ayahCount }, (_, i) => i + 1);
-  const currentSheetState: AyahState = sheetAyah ? stateOf(sheetAyah) : "none";
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <View
         style={{
-          padding: theme.spacing(4),
+          paddingHorizontal: theme.spacing(4),
+          paddingTop: theme.spacing(3),
+          paddingBottom: theme.spacing(4),
           backgroundColor: theme.surface,
           borderBottomWidth: 1,
           borderColor: theme.border,
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: theme.spacing(3) }}>
+        {/* Row 1 — actions only, aligned */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: theme.spacing(3),
+          }}
+        >
           <Pressable
             onPress={onBack}
             style={({ pressed }) => ({
-              padding: theme.spacing(2),
-              marginRight: theme.spacing(2),
-              borderRadius: theme.radius,
-              backgroundColor: pressed ? theme.surfaceRaised : "transparent",
-            })}
-          >
-            <Text style={{ color: theme.accent, fontSize: 16 }}>← Back</Text>
-          </Pressable>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: theme.text, fontSize: 20, fontWeight: "700" }}>
-              {surah.nameTransliterated}
-            </Text>
-            <Text style={{ color: theme.textDim, fontSize: 13 }}>
-              {surah.nameArabic} · {surah.ayahCount} ayat · Juz {surah.juzSpan.join(", ")}
-            </Text>
-          </View>
-          <Pressable
-            onPress={() => setRangeOpen(true)}
-            style={({ pressed }) => ({
-              paddingHorizontal: theme.spacing(3),
+              paddingHorizontal: theme.spacing(2),
               paddingVertical: theme.spacing(2),
               borderRadius: theme.radius,
-              borderWidth: 1,
-              borderColor: theme.accent,
               backgroundColor: pressed ? theme.surfaceRaised : "transparent",
             })}
           >
-            <Text style={{ color: theme.accent }}>Mark range…</Text>
+            <Text style={{ color: theme.accent, fontSize: 15 }}>{t.back}</Text>
           </Pressable>
+          <View style={{ flexDirection: "row", gap: theme.spacing(2) }}>
+            <HeaderButton
+              label={t.select}
+              onPress={enterSelection}
+              disabled={selectionMode}
+            />
+            <HeaderButton
+              label={t.chooseInterval}
+              onPress={() => setRangeOpen(true)}
+              disabled={selectionMode}
+            />
+          </View>
         </View>
-        <View style={{ marginBottom: theme.spacing(2) }}>
-          <ProgressBar progress={progress} height={8} />
-          <Text style={{ color: theme.textDim, fontSize: 12, marginTop: theme.spacing(1) }}>
-            {progress.memorized + progress.needsReview} memorized ·{" "}
-            {progress.needsReview} to review · {progress.learning} learning · {Math.round(progress.percent)}%
+
+        {/* Row 2 — surah name (transliterated + Arabic) */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+            marginBottom: theme.spacing(1),
+          }}
+        >
+          <Text style={{ color: theme.text, fontSize: 22, fontWeight: "700" }}>
+            {surah.nameTransliterated}
+          </Text>
+          <Text style={{ color: theme.textDim, fontSize: 18 }}>
+            {surah.nameArabic}
           </Text>
         </View>
+
+        {/* Row 3 — metadata */}
+        <Text
+          style={{
+            color: theme.textFaint,
+            fontSize: 12,
+            marginBottom: theme.spacing(4),
+          }}
+        >
+          {t.surahHeaderMeta(surah.ayahCount, surah.juzSpan.join(", "))}
+        </Text>
+
+        {/* Progress bar + stats */}
+        <ProgressBar progress={progress} height={8} />
+        <Text
+          style={{
+            color: theme.textDim,
+            fontSize: 12,
+            marginTop: theme.spacing(2),
+            marginBottom: theme.spacing(4),
+          }}
+        >
+          {t.surahStats(
+            progress.memorized,
+            progress.learning,
+            Math.round(progress.percent),
+          )}
+        </Text>
+
         <Legend />
       </View>
       <ScrollView contentContainerStyle={{ padding: theme.spacing(3) }}>
@@ -113,23 +169,21 @@ export function SurahDetail({ surahId, onBack }: Props) {
               key={a}
               ayah={a}
               state={stateOf(a)}
-              onPress={() => setSheetAyah(a)}
-              onLongPress={() => cycleState(surahId, a)}
+              selected={selectionMode && selected.has(a)}
+              onPress={() =>
+                selectionMode ? toggleSelected(a) : cycleState(surahId, a)
+              }
             />
           ))}
         </View>
       </ScrollView>
-      <AyahSheet
-        visible={sheetAyah !== null}
-        surah={surahId}
-        ayah={sheetAyah ?? 1}
-        state={currentSheetState}
-        onClose={() => setSheetAyah(null)}
-        onSetState={(target) => sheetAyah && setState(surahId, sheetAyah, target)}
-        onMarkReviewed={() =>
-          sheetAyah && reviewRange(surahId, sheetAyah, sheetAyah)
-        }
-      />
+      {selectionMode && (
+        <SelectionBar
+          count={selected.size}
+          onApply={applySelection}
+          onCancel={exitSelection}
+        />
+      )}
       <RangeMarker
         visible={rangeOpen}
         surah={surahId}
@@ -141,15 +195,49 @@ export function SurahDetail({ surahId, onBack }: Props) {
   );
 }
 
+function HeaderButton({
+  label,
+  onPress,
+  disabled,
+}: {
+  label: string;
+  onPress(): void;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => ({
+        paddingHorizontal: theme.spacing(3),
+        paddingVertical: theme.spacing(2),
+        borderRadius: theme.radius,
+        borderWidth: 1,
+        borderColor: theme.accent,
+        backgroundColor: pressed ? theme.surfaceRaised : "transparent",
+        opacity: disabled ? 0.35 : 1,
+      })}
+    >
+      <Text style={{ color: theme.accent, fontSize: 13 }}>{label}</Text>
+    </Pressable>
+  );
+}
+
 function Legend() {
-  const items: { label: string; color: string; border?: string; badge?: boolean }[] = [
-    { label: "Not started", color: "transparent", border: theme.border },
-    { label: "Learning", color: theme.learningDim, border: theme.learning },
-    { label: "Memorized", color: theme.memorizedDim, border: theme.memorized },
-    { label: "Needs review", color: theme.memorizedDim, border: theme.needsReview, badge: true },
+  const items: { label: string; color: string; border?: string }[] = [
+    { label: t.legend.none, color: "transparent", border: theme.border },
+    { label: t.legend.learning, color: theme.learningDim, border: theme.learning },
+    { label: t.legend.memorized, color: theme.memorizedDim, border: theme.memorized },
   ];
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing(3) }}>
+    <View
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        columnGap: theme.spacing(5),
+        rowGap: theme.spacing(2),
+      }}
+    >
       {items.map((it) => (
         <View key={it.label} style={{ flexDirection: "row", alignItems: "center" }}>
           <View
@@ -160,24 +248,10 @@ function Legend() {
               backgroundColor: it.color,
               borderWidth: 1.5,
               borderColor: it.border,
-              marginRight: theme.spacing(1),
-              position: "relative",
+              marginRight: theme.spacing(2),
             }}
-          >
-            {it.badge && (
-              <View
-                style={{
-                  position: "absolute",
-                  top: -3,
-                  right: -3,
-                  width: 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: theme.needsReview,
-                }}
-              />
-            )}
-          </View>
+          />
+
           <Text style={{ color: theme.textDim, fontSize: 12 }}>{it.label}</Text>
         </View>
       ))}
